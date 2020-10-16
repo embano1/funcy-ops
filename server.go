@@ -2,9 +2,9 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 const (
@@ -18,27 +18,39 @@ type Logger interface {
 	Println(v ...interface{})
 }
 
-// Option changes default Server parameters
-type Option func(*Server)
+// ServerOption changes default Server parameters
+type ServerOption func(*Server) error
 
 // WithInsecure skips certificate verification
-func WithInsecure(in bool) Option {
-	return func(s *Server) {
+func WithInsecure(in bool) ServerOption {
+	return func(s *Server) error {
+		if in {
+			return errors.New("security alert")
+		}
 		s.insecure = in
+		return nil
 	}
 }
 
 // WithAddress sets the listener address
-func WithAddress(addr string) Option {
-	return func(s *Server) {
+func WithAddress(addr string) ServerOption {
+	return func(s *Server) error {
+		if !strings.Contains(addr, ":") {
+			return errors.New("port must be specified")
+		}
 		s.address = addr
+		return nil
 	}
 }
 
 // WithLogger sets a custom logger
-func WithLogger(log Logger) Option {
-	return func(s *Server) {
+func WithLogger(log Logger) ServerOption {
+	return func(s *Server) error {
+		if log == nil {
+			return errors.New("logger is nil")
+		}
 		s.log = log
+		return nil
 	}
 }
 
@@ -51,22 +63,19 @@ type Server struct {
 }
 
 // New creates a new server listening on defaultAddress
-func New(ops ...Option) (*Server, error) {
-	prefix := fmt.Sprintf("%s", logPrefix)
+func New(ops ...ServerOption) (*Server, error) {
 	s := Server{
 		address:  defaultAddress,
 		insecure: skipCertWarning,
-		log:      log.New(os.Stdout, prefix, log.LstdFlags|log.Lshortfile),
+		log:      log.New(os.Stdout, logPrefix, log.LstdFlags|log.Lshortfile),
 		stopCh:   make(chan struct{}),
 	}
 
 	for _, o := range ops {
-		o(&s)
-	}
-
-	// validate defaults, options, etc.
-	if s.insecure {
-		return nil, errors.New("security alert")
+		err := o(&s)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &s, nil
