@@ -9,7 +9,18 @@ import (
 )
 
 func main() {
-	s := server.New("0.0.0.0:8080", false, log.New(os.Stdout, "[server] ", log.LstdFlags|log.Lshortfile))
+	logger := log.New(os.Stdout, "[server] ", log.LstdFlags|log.Lshortfile)
+	cfg := server.Config{
+		Address:  "0.0.0.0:8080",
+		Insecure: false,
+		Log:      logger,
+		StopCh:   make(chan struct{}),
+	}
+
+	s, err := server.New(&cfg)
+	if err != nil {
+		logger.Fatal(err)
+	}
 
 	go func() {
 		time.Sleep(time.Second * 3)
