@@ -1,4 +1,4 @@
-package server
+package web
 
 import (
 	"errors"
@@ -62,8 +62,8 @@ type Server struct {
 	stopCh   chan struct{}
 }
 
-// New creates a new server listening on defaultAddress
-func New(ops ...ServerOption) (*Server, error) {
+// NewServer creates a new server listening on defaultAddress
+func NewServer(ops ...ServerOption) (*Server, error) {
 	s := Server{
 		address:  defaultAddress,
 		insecure: skipCertWarning,
