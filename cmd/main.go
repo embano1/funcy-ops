@@ -9,15 +9,8 @@ import (
 )
 
 func main() {
-	logger := log.New(os.Stdout, "[server] ", log.LstdFlags|log.Lshortfile)
-	cfg := server.Config{
-		Address:  "0.0.0.0:8080",
-		Insecure: false,
-		Log:      logger,
-		StopCh:   make(chan struct{}),
-	}
-
-	s, err := server.New(&cfg)
+	logger := log.New(os.Stdout, "[my server] ", log.LstdFlags|log.Lshortfile)
+	s, err := server.New()
 	if err != nil {
 		logger.Fatal(err)
 	}
